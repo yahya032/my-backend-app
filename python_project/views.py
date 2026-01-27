@@ -16,8 +16,10 @@ from .serializers import (
 
 # 🔹 Firebase
 from firebase_admin import auth as firebase_auth
-from .firebase_admin_config import firebase_admin
+from .firebase_admin_config import firebase_admin  # initialise Firebase depuis la variable d'env
 
+
+# ---------------- USER ALERTS ----------------
 @api_view(['GET'])
 def user_alerts(request):
     user_id = request.query_params.get('user')
@@ -26,20 +28,10 @@ def user_alerts(request):
             {"error": "user parameter is required"},
             status=status.HTTP_400_BAD_REQUEST
         )
-    
-    
+
     alerts = Alert.objects.filter(user_id=user_id).order_by('-created_at')
     serializer = AlertSerializer(alerts, many=True)
     return Response(serializer.data)
-from .models import University, Speciality, Level, Semester, Matiere, Document
-from .serializers import (
-    UniversitySerializer, SpecialitySerializer, LevelSerializer,
-    SemesterSerializer, MatiereSerializer, DocumentSerializer,
-    FirebaseUserSerializer, FirebaseCreateUserSerializer
-)
-
-from firebase_admin import auth as firebase_auth
-from .firebase_admin_config import firebase_admin
 
 
 # ---------------- BASE VIEWSET ----------------
@@ -55,18 +47,17 @@ class UniversityViewSet(BaseViewSet):
     queryset = University.objects.all()
     serializer_class = UniversitySerializer
 
-    # ✅ Téléchargement du calendrier PDF
     @action(detail=True, methods=['get'], url_path='download-calendar')
     def download_calendar(self, request, pk=None):
         university = self.get_object()
 
-        # 1️⃣ Vérifie le fichier calendrier du modèle University
+        # 1️⃣ Fichier calendrier du modèle
         if university.calendar and university.calendar.name:
             file_path = university.calendar.path
             if os.path.exists(file_path):
                 return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
 
-        # 2️⃣ Sinon, cherche un Document PDF associé avec "calendrier"
+        # 2️⃣ Sinon, Document PDF avec "calendrier"
         calendar_doc = Document.objects.filter(
             matiere__speciality__university=university,
             file__endswith='.pdf',
@@ -76,24 +67,17 @@ class UniversityViewSet(BaseViewSet):
         if calendar_doc and calendar_doc.file:
             return FileResponse(calendar_doc.file.open(), content_type='application/pdf')
 
-        # 3️⃣ Aucun calendrier trouvé
         return Response(
             {"error": "Calendrier non trouvé."},
             status=status.HTTP_404_NOT_FOUND
         )
 
-    # 🔹 Endpoint pour récupérer l'URL du calendrier
     @action(detail=True, methods=['get'], url_path='calendar-url')
     def calendar_url(self, request, pk=None):
         university = self.get_object()
         if university.calendar and university.calendar.name:
-            return Response({
-                'url': request.build_absolute_uri(university.calendar.url)
-            })
-        return Response(
-            {'url': None, 'error': 'Calendrier non trouvé.'},
-            status=status.HTTP_404_NOT_FOUND
-        )
+            return Response({'url': request.build_absolute_uri(university.calendar.url)})
+        return Response({'url': None, 'error': 'Calendrier non trouvé.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 # ---------------- SPECIALITY ----------------
@@ -110,7 +94,6 @@ class SpecialityViewSet(BaseViewSet):
 class LevelViewSet(BaseViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
-    # Retourne tous les niveaux (pas de filtre)
 
 
 # ---------------- SEMESTER ----------------
@@ -178,10 +161,8 @@ class DocumentViewSet(BaseViewSet):
 @api_view(['GET'])
 def list_firebase_users(request):
     try:
-        users = [
-            {"uid": u.uid, "email": u.email, "disabled": u.disabled}
-            for u in firebase_auth.list_users().iterate_all()
-        ]
+        users = [{"uid": u.uid, "email": u.email, "disabled": u.disabled}
+                 for u in firebase_auth.list_users().iterate_all()]
         serializer = FirebaseUserSerializer(users, many=True)
         return Response({"users": serializer.data})
     except Exception as e:
