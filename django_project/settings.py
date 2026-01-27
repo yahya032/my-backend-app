@@ -6,9 +6,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
-
 DEBUG = os.getenv("DEBUG", "True") == "True"
-
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",")
 
 # ================== APPLICATIONS ==================
@@ -22,7 +20,6 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "corsheaders",
-
     "python_project",   # ton app
 ]
 
@@ -47,7 +44,7 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [BASE_DIR / "templates"],  # prêt si besoin
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -85,27 +82,14 @@ USE_TZ = True
 # ================== STATIC & MEDIA ==================
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # ================== CORS ==================
-CORS_ALLOW_ALL_ORIGINS = False
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-    "http://192.168.1.16:8000",
-    "http://192.168.1.10:3000",
-    "http://192.168.100.40:8000",
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:8000",
-    "http://127.0.0.1:8000",
-]
+CORS_ALLOW_ALL_ORIGINS = True  # Render nécessite True
+CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8000").split(",")
 
 # ================== DEFAULT ==================
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
