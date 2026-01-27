@@ -7,7 +7,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
 DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = ["my-backend-app-m2iq.onrender.com"]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "my-backend-app-m2iq.onrender.com").split(",")
+
 # ================== APPLICATIONS ==================
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -26,7 +27,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Pour servir static files
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -87,13 +88,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Pour que Render serve les fichiers médias même en prod
-# On utilise WhiteNoise et Django `static()` dans urls.py
-# MEDIA_URL sera transformé automatiquement en URL complète
-
 # ================== CORS ==================
 CORS_ALLOW_ALL_ORIGINS = True
-CSRF_TRUSTED_ORIGINS = os.getenv("CSRF_TRUSTED_ORIGINS", "https://my-backend-app-m2iq.onrender.com").split(",")
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    "CSRF_TRUSTED_ORIGINS",
+    "https://my-backend-app-m2iq.onrender.com"
+).split(",")
 
 # ================== DEFAULT ==================
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
