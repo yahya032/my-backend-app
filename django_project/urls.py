@@ -7,7 +7,7 @@ admin_site = get_admin_site()
 
 urlpatterns = [
     path('admin/', admin_site.urls),
-    # path('api/', include('python_project.api_urls')),  # si tu as des API à ajouter
+    path('api/', include('python_project.api_urls')),  # ✅ inclut toutes les routes API
 ]
 
 # Pour servir les fichiers médias en développement

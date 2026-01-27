@@ -26,7 +26,7 @@ def user_alerts(request):
     if not user_id:
         return Response(
             {"error": "user parameter is required"},
-            status=status.HTTP_400_BAD_REQUEST
+            staatus=status.HTTP_400_BAD_REQUEST
         )
 
     alerts = Alert.objects.filter(user_id=user_id).order_by('-created_at')
