@@ -1,7 +1,16 @@
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials
 
-# 🔹 Remplace ce chemin par le chemin exact de ton fichier JSON Firebase
-cred = credentials.Certificate("serviceAccountKey.json")
-# Initialise Firebase
-firebase_admin.initialize_app(cred)
+def init_firebase():
+    if not firebase_admin._apps:
+        firebase_key_json = os.environ.get("FIREBASE_KEY_JSON")
+        if not firebase_key_json:
+            raise ValueError("FIREBASE_KEY_JSON non défini")
+
+        cred_dict = json.loads(firebase_key_json)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+
+init_firebase()

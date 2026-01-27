@@ -15,8 +15,8 @@ from .serializers import (
 )
 
 # 🔹 Firebase
+# ⚠️ Firebase est déjà initialisé dans firebase_admin_config.py au démarrage de Django
 from firebase_admin import auth as firebase_auth
-from .firebase_admin_config import firebase_admin  # initialise Firebase depuis la variable d'env
 
 
 # ---------------- USER ALERTS ----------------
@@ -55,7 +55,10 @@ class UniversityViewSet(BaseViewSet):
         if university.calendar and university.calendar.name:
             file_path = university.calendar.path
             if os.path.exists(file_path):
-                return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                return FileResponse(
+                    open(file_path, 'rb'),
+                    content_type='application/pdf'
+                )
 
         # 2️⃣ Sinon, Document PDF avec "calendrier"
         calendar_doc = Document.objects.filter(
@@ -65,7 +68,10 @@ class UniversityViewSet(BaseViewSet):
         ).first()
 
         if calendar_doc and calendar_doc.file:
-            return FileResponse(calendar_doc.file.open(), content_type='application/pdf')
+            return FileResponse(
+                calendar_doc.file.open(),
+                content_type='application/pdf'
+            )
 
         return Response(
             {"error": "Calendrier non trouvé."},
@@ -76,8 +82,13 @@ class UniversityViewSet(BaseViewSet):
     def calendar_url(self, request, pk=None):
         university = self.get_object()
         if university.calendar and university.calendar.name:
-            return Response({'url': request.build_absolute_uri(university.calendar.url)})
-        return Response({'url': None, 'error': 'Calendrier non trouvé.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                'url': request.build_absolute_uri(university.calendar.url)
+            })
+        return Response(
+            {'url': None, 'error': 'Calendrier non trouvé.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 
 # ---------------- SPECIALITY ----------------
@@ -161,8 +172,14 @@ class DocumentViewSet(BaseViewSet):
 @api_view(['GET'])
 def list_firebase_users(request):
     try:
-        users = [{"uid": u.uid, "email": u.email, "disabled": u.disabled}
-                 for u in firebase_auth.list_users().iterate_all()]
+        users = [
+            {
+                "uid": u.uid,
+                "email": u.email,
+                "disabled": u.disabled
+            }
+            for u in firebase_auth.list_users().iterate_all()
+        ]
         serializer = FirebaseUserSerializer(users, many=True)
         return Response({"users": serializer.data})
     except Exception as e:
@@ -181,12 +198,15 @@ def create_firebase_user(request):
                 display_name=data.get('display_name', ''),
                 disabled=data.get('disabled', False)
             )
-            return Response({
-                "uid": user.uid,
-                "email": user.email,
-                "display_name": user.display_name,
-                "disabled": user.disabled
-            }, status=201)
+            return Response(
+                {
+                    "uid": user.uid,
+                    "email": user.email,
+                    "display_name": user.display_name,
+                    "disabled": user.disabled
+                },
+                status=status.HTTP_201_CREATED
+            )
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
