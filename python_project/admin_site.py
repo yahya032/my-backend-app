@@ -1,10 +1,8 @@
 # python_project/admin_site.py
-
 from django.contrib.admin import AdminSite
 from django.urls import path
 from django.shortcuts import render
 from .models import Alert, Document, University, Speciality, Level, Semester, Matiere
-
 
 class CustomAdminSite(AdminSite):
     site_header = "Administration SupNum"
@@ -30,3 +28,6 @@ class CustomAdminSite(AdminSite):
             total_matieres=Matiere.objects.count(),
         )
         return render(request, "admin/custom_dashboard.html", context)
+
+# ⚠️ Crée l’instance ici
+admin_site = CustomAdminSite(name='custom_admin')
