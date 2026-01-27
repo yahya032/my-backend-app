@@ -7,22 +7,29 @@ from .views import (
     SemesterViewSet,
     MatiereViewSet,
     DocumentViewSet,
-    list_firebase_users,      # 🔹 endpoint Firebase
-    create_firebase_user      # 🔹 endpoint création Firebase
+    list_firebase_users,
+    create_firebase_user
 )
+from django.conf import settings
+from django.conf.urls.static import static
+from python_project.admin_site import admin_site
 
-# 🔹 Création du router DRF pour les viewsets
+# Router DRF
 router = DefaultRouter()
-router.register(r'universities', UniversityViewSet)
-router.register(r'specialities', SpecialityViewSet)
-router.register(r'levels', LevelViewSet)
-router.register(r'semesters', SemesterViewSet)
-router.register(r'matieres', MatiereViewSet)
-router.register(r'documents', DocumentViewSet)
+router.register(r'universities', UniversityViewSet, basename='university')
+router.register(r'specialities', SpecialityViewSet, basename='speciality')
+router.register(r'levels', LevelViewSet, basename='level')
+router.register(r'semesters', SemesterViewSet, basename='semester')
+router.register(r'matieres', MatiereViewSet, basename='matiere')
+router.register(r'documents', DocumentViewSet, basename='document')
 
-# 🔹 URL patterns
+# URL patterns
 urlpatterns = [
-    path('', include(router.urls)),                           # Inclut toutes les routes des viewsets
-    path('firebase-users/', list_firebase_users, name='firebase-users'),        # Lister les utilisateurs Firebase
-    path('firebase-create-user/', create_firebase_user, name='firebase-create-user'),  # Créer un utilisateur Firebase
+    path('admin/', admin_site.urls),
+    path('api/', include(router.urls)),
+    path('api/firebase-users/', list_firebase_users, name='firebase-users'),
+    path('api/firebase-create-user/', create_firebase_user, name='firebase-create-user'),
 ]
+
+# Servir les fichiers médias en DEV et PROD
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

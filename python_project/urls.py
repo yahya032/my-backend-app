@@ -15,7 +15,7 @@ from python_project.views import (
 from django.conf import settings
 from django.conf.urls.static import static
 
-# Router DRF
+# ================== ROUTER DRF ==================
 router = DefaultRouter()
 router.register(r'universities', UniversityViewSet, basename='university')
 router.register(r'specialities', SpecialityViewSet, basename='speciality')
@@ -24,6 +24,7 @@ router.register(r'semesters', SemesterViewSet, basename='semester')
 router.register(r'matieres', MatiereViewSet, basename='matiere')
 router.register(r'documents', DocumentViewSet, basename='document')
 
+# ================== URLS ==================
 urlpatterns = [
     path('admin/', admin_site.urls),
     path('api/', include(router.urls)),

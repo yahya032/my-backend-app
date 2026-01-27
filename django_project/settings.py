@@ -20,7 +20,6 @@ INSTALLED_APPS = [
 
     "rest_framework",
     "corsheaders",
-    "storages",  # Pour Google Cloud Storage
     "python_project",  # ton app
 ]
 
@@ -86,10 +85,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ================== MEDIA ==================
-# Utilisation de Google Cloud Storage pour les médias
-DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
-GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")  # Nom de ton bucket
-MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
+# Serveur de fichiers médias sur Render (disque persistant)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/mnt/disks/media-storage")
 
 # ================== CORS ==================
 CORS_ALLOW_ALL_ORIGINS = True
