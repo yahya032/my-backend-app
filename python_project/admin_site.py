@@ -1,23 +1,35 @@
-# python_project/admin_site.py
 from django.contrib.admin import AdminSite
 from django.urls import path
-from django.shortcuts import render
+from django.template.response import TemplateResponse
 from .models import Alert, Document, University, Speciality, Level, Semester, Matiere
 
-class CustomAdminSite(AdminSite):
+class SupNumAdminSite(AdminSite):
+    """
+    Admin personnalisé pour l'application SupNum.
+    Permet d'ajouter un dashboard personnalisé et d'enregistrer tous les modèles.
+    """
     site_header = "Administration SupNum"
-    site_title = "Dashboard Admin"
-    index_title = "Résumé des données"
+    site_title = "SupNum Admin"
+    index_title = "Tableau de bord"
 
     def get_urls(self):
+        """
+        Ajoute une route custom /dashboard/ à l'admin
+        """
         urls = super().get_urls()
         custom_urls = [
-            path('dashboard/', self.admin_view(self.dashboard_view), name='dashboard'),
+            path(
+                "dashboard/",
+                self.admin_view(self.dashboard_view),
+                name="dashboard",
+            ),
         ]
         return custom_urls + urls
 
     def dashboard_view(self, request):
-        # Calcul des statistiques
+        """
+        Vue personnalisée du dashboard
+        """
         context = dict(
             self.each_context(request),
             total_alerts=Alert.objects.count(),
@@ -28,11 +40,20 @@ class CustomAdminSite(AdminSite):
             total_semesters=Semester.objects.count(),
             total_matieres=Matiere.objects.count(),
         )
-        return render(request, "admin/custom_dashboard.html", context)
+        return TemplateResponse(
+            request,
+            "admin/custom_dashboard.html",
+            context,
+        )
 
-def get_admin_site():
-    """
-    Renvoie une instance de l'admin personnalisé.
-    Utilise cette fonction pour éviter les import circulaires.
-    """
-    return CustomAdminSite(name='custom_admin')
+# Instanciation unique de l'admin
+admin_site = SupNumAdminSite(name="supnum_admin")
+
+# Enregistrement des modèles
+admin_site.register(Alert)
+admin_site.register(Document)
+admin_site.register(University)
+admin_site.register(Speciality)
+admin_site.register(Level)
+admin_site.register(Semester)
+admin_site.register(Matiere)
