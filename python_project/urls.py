@@ -1,6 +1,9 @@
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
-from .views import (
+from python_project.admin import admin_site
+from python_project.views import (
     UniversityViewSet,
     SpecialityViewSet,
     LevelViewSet,
@@ -12,7 +15,6 @@ from .views import (
     user_alerts,
 )
 
-# 🔹 Création du router DRF pour les ViewSets
 router = DefaultRouter()
 router.register(r'universities', UniversityViewSet, basename='university')
 router.register(r'specialities', SpecialityViewSet, basename='speciality')
@@ -21,10 +23,13 @@ router.register(r'semesters', SemesterViewSet, basename='semester')
 router.register(r'matieres', MatiereViewSet, basename='matiere')
 router.register(r'documents', DocumentViewSet, basename='document')
 
-# 🔹 URL patterns
 urlpatterns = [
-    path('', include(router.urls)),  # Inclut toutes les routes des viewsets
-    path('firebase-users/', list_firebase_users, name='firebase-users'),  # Liste des utilisateurs Firebase
-    path('firebase-create-user/', create_firebase_user, name='firebase-create-user'),  # Création d'utilisateur Firebase
-    path('alerts/', user_alerts, name='user-alerts'),  # Alertes utilisateur
+    path('admin/', admin_site.urls),
+    path('api/', include(router.urls)),
+    path('api/firebase-users/', list_firebase_users, name='firebase-users'),
+    path('api/firebase-create-user/', create_firebase_user, name='firebase-create-user'),
+    path('api/alerts/', user_alerts, name='user-alerts'),
 ]
+
+# 🔹 Servir les fichiers médias sur Render
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
