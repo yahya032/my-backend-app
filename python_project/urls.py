@@ -25,12 +25,12 @@ router.register(r'matieres', MatiereViewSet, basename='matiere')
 router.register(r'documents', DocumentViewSet, basename='document')
 
 urlpatterns = [
-    path('admin/', admin_site.urls),              # Admin personnalisé
-    path('api/', include(router.urls)),          # Routes ViewSets
+    path('admin/', admin_site.urls),
+    path('api/', include(router.urls)),
     path('api/firebase-users/', list_firebase_users, name='firebase-users'),
     path('api/firebase-create-user/', create_firebase_user, name='firebase-create-user'),
     path('api/alerts/', user_alerts, name='user-alerts'),
 ]
 
-# Servir les médias en dev ET prod
+# Servir les fichiers médias (calendars, documents, logos) en DEV et PROD
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
