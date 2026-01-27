@@ -6,7 +6,7 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-change-this-in-production")
-DEBUG = os.getenv("DEBUG", "True") == "True"
+DEBUG = os.getenv("DEBUG", "False") == "True"
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "my-backend-app-m2iq.onrender.com").split(",")
 
 # ================== APPLICATIONS ==================
@@ -85,9 +85,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ================== MEDIA ==================
-# Pour DEV : fichiers servis via Django
+# Sur Render, point directement vers le dossier media
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.getenv("MEDIA_ROOT", BASE_DIR / "media")  # persistant sur Render ou local dev
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/opt/render/project/src/media")  # chemin exact sur Render
 
 # ================== CORS ==================
 CORS_ALLOW_ALL_ORIGINS = True
