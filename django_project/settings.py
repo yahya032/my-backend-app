@@ -85,9 +85,10 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # ================== MEDIA ==================
-# Serveur de fichiers médias sur Render (disque persistant)
+# Pour DEV : fichiers servis via Django
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.getenv("MEDIA_ROOT", "/mnt/disks/media-storage")
+MEDIA_ROOT = os.getenv("MEDIA_ROOT", BASE_DIR / "media")  # persistant sur Render ou local dev
+
 # ================== CORS ==================
 CORS_ALLOW_ALL_ORIGINS = True
 CSRF_TRUSTED_ORIGINS = os.getenv(
