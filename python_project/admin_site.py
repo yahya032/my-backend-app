@@ -17,6 +17,7 @@ class CustomAdminSite(AdminSite):
         return custom_urls + urls
 
     def dashboard_view(self, request):
+        # Calcul des statistiques
         context = dict(
             self.each_context(request),
             total_alerts=Alert.objects.count(),
@@ -29,5 +30,9 @@ class CustomAdminSite(AdminSite):
         )
         return render(request, "admin/custom_dashboard.html", context)
 
-# ⚠️ Crée l’instance ici
-admin_site = CustomAdminSite(name='custom_admin')
+def get_admin_site():
+    """
+    Renvoie une instance de l'admin personnalisé.
+    Utilise cette fonction pour éviter les import circulaires.
+    """
+    return CustomAdminSite(name='custom_admin')
