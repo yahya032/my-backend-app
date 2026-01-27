@@ -15,7 +15,7 @@ from .serializers import (
 )
 
 # 🔹 Firebase
-# ⚠️ Firebase est déjà initialisé dans firebase_admin_config.py au démarrage de Django
+# ⚠️ Firebase est déjà initialisé automatiquement dans firebase_admin_config.py
 from firebase_admin import auth as firebase_auth
 
 
@@ -51,7 +51,7 @@ class UniversityViewSet(BaseViewSet):
     def download_calendar(self, request, pk=None):
         university = self.get_object()
 
-        # 1️⃣ Fichier calendrier du modèle
+        # 1️⃣ Fichier calendrier attaché au modèle
         if university.calendar and university.calendar.name:
             file_path = university.calendar.path
             if os.path.exists(file_path):
@@ -60,7 +60,7 @@ class UniversityViewSet(BaseViewSet):
                     content_type='application/pdf'
                 )
 
-        # 2️⃣ Sinon, Document PDF avec "calendrier"
+        # 2️⃣ Sinon chercher un document PDF contenant "calendrier"
         calendar_doc = Document.objects.filter(
             matiere__speciality__university=university,
             file__endswith='.pdf',
@@ -83,10 +83,11 @@ class UniversityViewSet(BaseViewSet):
         university = self.get_object()
         if university.calendar and university.calendar.name:
             return Response({
-                'url': request.build_absolute_uri(university.calendar.url)
+                "url": request.build_absolute_uri(university.calendar.url)
             })
+
         return Response(
-            {'url': None, 'error': 'Calendrier non trouvé.'},
+            {"url": None, "error": "Calendrier non trouvé."},
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -183,7 +184,7 @@ def list_firebase_users(request):
         serializer = FirebaseUserSerializer(users, many=True)
         return Response({"users": serializer.data})
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -208,6 +209,6 @@ def create_firebase_user(request):
                 status=status.HTTP_201_CREATED
             )
         except Exception as e:
-            return Response({"error": str(e)}, status=400)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-    return Response(serializer.errors, status=400)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
