@@ -24,3 +24,4 @@ Thumbs.db
 # Pytest / coverage
 .coverage
 htmlcov/
+"serviceAccountKey.json"   # empˆche d'ajouter … nouveau
