@@ -117,7 +117,6 @@ class SemesterViewSet(BaseViewSet):
         lid = self.request.query_params.get('level_id')
         return self.queryset.filter(level_id=lid) if lid else self.queryset
 
-
 # ---------------- MATIERE ----------------
 class MatiereViewSet(BaseViewSet):
     queryset = Matiere.objects.all()

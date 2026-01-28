@@ -1,11 +1,14 @@
 from rest_framework import serializers
 from .models import University, Speciality, Level, Semester, Matiere, Document, Alert
 
+# ---------------- ALERT ----------------
 class AlertSerializer(serializers.ModelSerializer):
     class Meta:
         model = Alert
         fields = ['id', 'user_id', 'title', 'message', 'created_at']
-# ---------------- University Serializer ----------------
+
+
+# ---------------- UNIVERSITY ----------------
 class UniversitySerializer(serializers.ModelSerializer):
     logo_url = serializers.SerializerMethodField()
     calendar_url = serializers.SerializerMethodField()
@@ -21,6 +24,7 @@ class UniversitySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if file_field and request:
             url = request.build_absolute_uri(file_field.url)
+            # Remplace localhost par ton IP locale pour l'émulateur mobile
             url = url.replace('127.0.0.1', '192.168.100.40').replace('localhost', '192.168.100.40')
             return url
         return None
@@ -32,7 +36,7 @@ class UniversitySerializer(serializers.ModelSerializer):
         return self._get_full_url(obj.calendar)
 
 
-# ---------------- Speciality Serializer ----------------
+# ---------------- SPECIALITY ----------------
 class SpecialitySerializer(serializers.ModelSerializer):
     university_name = serializers.CharField(source='university.name', read_only=True)
 
@@ -41,14 +45,14 @@ class SpecialitySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'university', 'university_name']
 
 
-# ---------------- Level Serializer ----------------
+# ---------------- LEVEL ----------------
 class LevelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Level
         fields = ['id', 'name']
 
 
-# ---------------- Semester Serializer ----------------
+# ---------------- SEMESTER ----------------
 class SemesterSerializer(serializers.ModelSerializer):
     level_name = serializers.CharField(source='level.name', read_only=True)
 
@@ -57,7 +61,7 @@ class SemesterSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'level', 'level_name']
 
 
-# ---------------- Matiere Serializer ----------------
+# ---------------- MATIERE ----------------
 class MatiereSerializer(serializers.ModelSerializer):
     speciality_name = serializers.CharField(source='speciality.name', read_only=True)
     university_name = serializers.CharField(source='speciality.university.name', read_only=True)
@@ -80,17 +84,23 @@ class MatiereSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         speciality_id = validated_data.pop('speciality_id')
-        validated_data['speciality'] = Speciality.objects.get(id=speciality_id)
+        try:
+            validated_data['speciality'] = Speciality.objects.get(id=speciality_id)
+        except Speciality.DoesNotExist:
+            raise serializers.ValidationError("La spécialité spécifiée n'existe pas.")
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'speciality_id' in validated_data:
             speciality_id = validated_data.pop('speciality_id')
-            instance.speciality = Speciality.objects.get(id=speciality_id)
+            try:
+                instance.speciality = Speciality.objects.get(id=speciality_id)
+            except Speciality.DoesNotExist:
+                raise serializers.ValidationError("La spécialité spécifiée n'existe pas.")
         return super().update(instance, validated_data)
 
 
-# ---------------- Document Serializer ----------------
+# ---------------- DOCUMENT ----------------
 class DocumentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
     matiere_name = serializers.CharField(source='matiere.name', read_only=True)
@@ -108,7 +118,12 @@ class DocumentSerializer(serializers.ModelSerializer):
         ]
 
     def get_file_url(self, obj):
-        return UniversitySerializer._get_full_url(self, obj.file)
+        request = self.context.get('request')
+        if obj.file and request:
+            url = request.build_absolute_uri(obj.file.url)
+            url = url.replace('127.0.0.1', '192.168.100.40').replace('localhost', '192.168.100.40')
+            return url
+        return None
 
     def validate(self, data):
         if not data.get('matiere'):
@@ -116,7 +131,7 @@ class DocumentSerializer(serializers.ModelSerializer):
         return data
 
 
-# ---------------- Firebase Serializers ----------------
+# ---------------- FIREBASE SERIALIZERS ----------------
 class FirebaseUserSerializer(serializers.Serializer):
     uid = serializers.CharField()
     email = serializers.EmailField(allow_null=True)
