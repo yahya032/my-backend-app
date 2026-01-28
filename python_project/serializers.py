@@ -57,12 +57,13 @@ class SemesterSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'level', 'level_name']
 
 
+# ---------------- MATIERE ---------------- 
 # ---------------- MATIERE ----------------
 class MatiereSerializer(serializers.ModelSerializer):
-    speciality_name = serializers.CharField(source='speciality.name', read_only=True)
-    university_name = serializers.CharField(source='speciality.university.name', read_only=True)
-    semester_name = serializers.CharField(source='semester.name', read_only=True)
-    level_name = serializers.CharField(source='semester.level.name', read_only=True)
+    speciality_name = serializers.SerializerMethodField()
+    university_name = serializers.SerializerMethodField()
+    semester_name = serializers.SerializerMethodField()
+    level_name = serializers.SerializerMethodField()
 
     speciality_id = serializers.IntegerField(write_only=True, required=True)
 
@@ -72,6 +73,18 @@ class MatiereSerializer(serializers.ModelSerializer):
             'id', 'name', 'semester', 'speciality', 'speciality_id',
             'speciality_name', 'university_name', 'semester_name', 'level_name'
         ]
+
+    def get_speciality_name(self, obj):
+        return obj.speciality.name if obj.speciality else None
+
+    def get_university_name(self, obj):
+        return obj.speciality.university.name if obj.speciality and obj.speciality.university else None
+
+    def get_semester_name(self, obj):
+        return obj.semester.name if obj.semester else None
+
+    def get_level_name(self, obj):
+        return obj.semester.level.name if obj.semester and obj.semester.level else None
 
     def validate_speciality_id(self, value):
         if not Speciality.objects.filter(id=value).exists():
@@ -94,11 +107,11 @@ class MatiereSerializer(serializers.ModelSerializer):
 # ---------------- DOCUMENT ----------------
 class DocumentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
-    matiere_name = serializers.CharField(source='matiere.name', read_only=True)
-    semester_name = serializers.CharField(source='matiere.semester.name', read_only=True)
-    level_name = serializers.CharField(source='matiere.semester.level.name', read_only=True)
-    speciality_name = serializers.CharField(source='matiere.speciality.name', read_only=True)
-    university_name = serializers.CharField(source='matiere.speciality.university.name', read_only=True)
+    matiere_name = serializers.SerializerMethodField()
+    semester_name = serializers.SerializerMethodField()
+    level_name = serializers.SerializerMethodField()
+    speciality_name = serializers.SerializerMethodField()
+    university_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Document
@@ -116,12 +129,28 @@ class DocumentSerializer(serializers.ModelSerializer):
             return url
         return None
 
+    def get_matiere_name(self, obj):
+        return obj.matiere.name if obj.matiere else None
+
+    def get_semester_name(self, obj):
+        return obj.matiere.semester.name if obj.matiere and obj.matiere.semester else None
+
+    def get_level_name(self, obj):
+        return obj.matiere.semester.level.name if obj.matiere and obj.matiere.semester and obj.matiere.semester.level else None
+
+    def get_speciality_name(self, obj):
+        return obj.matiere.speciality.name if obj.matiere and obj.matiere.speciality else None
+
+    def get_university_name(self, obj):
+        return obj.matiere.speciality.university.name if obj.matiere and obj.matiere.speciality and obj.matiere.speciality.university else None
+
     def validate(self, data):
         if not data.get('matiere'):
             raise serializers.ValidationError({"matiere": "Matière obligatoire."})
         return data
 
-
+# ---------------- DOCUMENT ----------------
+ 
 # ---------------- FIREBASE SERIALIZERS ----------------
 class FirebaseUserSerializer(serializers.Serializer):
     uid = serializers.CharField()

@@ -124,12 +124,13 @@ class MatiereViewSet(BaseViewSet):
 
 
 # ---------------- DOCUMENT ----------------
+# ---------------- DOCUMENT ----------------
 class DocumentViewSet(BaseViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
 
     def get_queryset(self):
-        filters = {}
+        qs = self.queryset
         level_id = self.request.query_params.get('level_id')
         semester_id = self.request.query_params.get('semester_id')
         speciality_id = self.request.query_params.get('speciality_id')
@@ -137,18 +138,24 @@ class DocumentViewSet(BaseViewSet):
         matiere_id = self.request.query_params.get('matiere_id')
 
         if matiere_id:
-            filters['matiere_id'] = matiere_id
+            qs = qs.filter(matiere_id=matiere_id)
         if semester_id:
-            filters['matiere__semester_id'] = semester_id
+            qs = qs.filter(Q(matiere__semester_id=semester_id) | Q(matiere__semester__isnull=True))
         if level_id:
-            filters['matiere__level_id'] = level_id
+            qs = qs.filter(Q(matiere__level_id=level_id) | Q(matiere__level__isnull=True))
         if speciality_id:
-            filters['matiere__speciality_id'] = speciality_id
+            qs = qs.filter(Q(matiere__speciality_id=speciality_id) | Q(matiere__speciality__isnull=True))
         if university_id:
-            filters['matiere__speciality__university_id'] = university_id
+            qs = qs.filter(Q(matiere__speciality__university_id=university_id) | Q(matiere__speciality__university__isnull=True))
 
-        return self.queryset.filter(**filters).order_by('id')
-
+        return qs.order_by(
+            'matiere__speciality__university__id',
+            'matiere__speciality__id',
+            'matiere__level_id',
+            'matiere__semester_id',
+            'matiere_id',
+            'id'
+        )
 
 # ---------------- FIREBASE ----------------
 @api_view(['GET'])
