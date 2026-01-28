@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import api_view, action
 from rest_framework.response import Response
 from django.http import FileResponse
+from django.db.models import Q
 import os
 
 from .models import University, Speciality, Level, Semester, Matiere, Document, Alert
@@ -22,12 +23,14 @@ def user_alerts(request):
     serializer = AlertSerializer(alerts, many=True)
     return Response(serializer.data)
 
+
 # ---------------- BASE VIEWSET ----------------
 class BaseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.AllowAny]
 
     def get_serializer_context(self):
         return {'request': self.request}
+
 
 # ---------------- UNIVERSITY ----------------
 class UniversityViewSet(BaseViewSet):
@@ -37,6 +40,7 @@ class UniversityViewSet(BaseViewSet):
     @action(detail=True, methods=['get'], url_path='download-calendar')
     def download_calendar(self, request, pk=None):
         university = self.get_object()
+
         if university.calendar and university.calendar.name:
             file_path = university.calendar.path
             if os.path.exists(file_path):
@@ -51,6 +55,7 @@ class UniversityViewSet(BaseViewSet):
 
         if calendar_doc and calendar_doc.file:
             return FileResponse(calendar_doc.file.open(), content_type='application/pdf')
+
         return Response({"error": "Calendrier non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
     @action(detail=True, methods=['get'], url_path='calendar-url')
@@ -60,6 +65,7 @@ class UniversityViewSet(BaseViewSet):
             return Response({"url": request.build_absolute_uri(university.calendar.url)})
         return Response({"url": None, "error": "Calendrier non trouvé."}, status=status.HTTP_404_NOT_FOUND)
 
+
 # ---------------- SPECIALITY ----------------
 class SpecialityViewSet(BaseViewSet):
     queryset = Speciality.objects.all()
@@ -67,14 +73,17 @@ class SpecialityViewSet(BaseViewSet):
 
     def get_queryset(self):
         university_id = self.request.query_params.get('university_id')
+        qs = self.queryset
         if university_id:
-            return self.queryset.filter(university_id=university_id).order_by('id')
-        return self.queryset.order_by('id')
+            qs = qs.filter(university_id=university_id)
+        return qs.order_by('id')
+
 
 # ---------------- LEVEL ----------------
 class LevelViewSet(BaseViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
+
 
 # ---------------- SEMESTER ----------------
 class SemesterViewSet(BaseViewSet):
@@ -82,11 +91,12 @@ class SemesterViewSet(BaseViewSet):
     serializer_class = SemesterSerializer
 
     def get_queryset(self):
-        qs = self.queryset.order_by('id')  # 🔹 ordre S1→S6
+        qs = self.queryset.order_by('id')  # S1 → S6
         level_id = self.request.query_params.get('level_id')
         if level_id:
             qs = qs.filter(level_id=level_id)
         return qs
+
 
 # ---------------- MATIERE ----------------
 class MatiereViewSet(BaseViewSet):
@@ -94,22 +104,24 @@ class MatiereViewSet(BaseViewSet):
     serializer_class = MatiereSerializer
 
     def get_queryset(self):
-        filters = {}
+        qs = self.queryset
         level_id = self.request.query_params.get('level_id')
         semester_id = self.request.query_params.get('semester_id')
         speciality_id = self.request.query_params.get('speciality_id')
         university_id = self.request.query_params.get('university_id')
 
+        # 🔹 Filtres incluant les champs vides (null)
         if level_id:
-            filters['level_id'] = level_id
+            qs = qs.filter(Q(semester__level_id=level_id) | Q(semester__level__isnull=True))
         if semester_id:
-            filters['semester_id'] = semester_id
+            qs = qs.filter(Q(semester_id=semester_id) | Q(semester__isnull=True))
         if speciality_id:
-            filters['speciality_id'] = speciality_id
+            qs = qs.filter(Q(speciality_id=speciality_id) | Q(speciality__isnull=True))
         if university_id:
-            filters['speciality__university_id'] = university_id
+            qs = qs.filter(Q(speciality__university_id=university_id) | Q(speciality__university__isnull=True))
 
-        return self.queryset.filter(**filters).order_by('id')
+        return qs.order_by('semester__level__id', 'semester__id', 'id')
+
 
 # ---------------- DOCUMENT ----------------
 class DocumentViewSet(BaseViewSet):
@@ -137,6 +149,7 @@ class DocumentViewSet(BaseViewSet):
 
         return self.queryset.filter(**filters).order_by('id')
 
+
 # ---------------- FIREBASE ----------------
 @api_view(['GET'])
 def list_firebase_users(request):
@@ -147,6 +160,7 @@ def list_firebase_users(request):
         return Response({"users": serializer.data})
     except Exception as e:
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @api_view(['POST'])
 def create_firebase_user(request):
@@ -168,4 +182,5 @@ def create_firebase_user(request):
             }, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

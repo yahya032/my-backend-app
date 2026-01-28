@@ -80,19 +80,13 @@ class MatiereSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         speciality_id = validated_data.pop('speciality_id')
-        try:
-            validated_data['speciality'] = Speciality.objects.get(id=speciality_id)
-        except Speciality.DoesNotExist:
-            raise serializers.ValidationError("La spécialité spécifiée n'existe pas.")
+        validated_data['speciality'] = Speciality.objects.get(id=speciality_id)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if 'speciality_id' in validated_data:
             speciality_id = validated_data.pop('speciality_id')
-            try:
-                instance.speciality = Speciality.objects.get(id=speciality_id)
-            except Speciality.DoesNotExist:
-                raise serializers.ValidationError("La spécialité spécifiée n'existe pas.")
+            instance.speciality = Speciality.objects.get(id=speciality_id)
             instance.save()
         return super().update(instance, validated_data)
 
