@@ -18,13 +18,9 @@ class UniversitySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'logo_url', 'calendar_url']
 
     def _get_full_url(self, file_field):
-        """
-        🔹 Retourne l'URL complète pour mobile réel ou émulateur
-        """
         request = self.context.get('request')
-        if file_field and request:
+        if file_field and request and file_field.name:
             url = request.build_absolute_uri(file_field.url)
-            # Remplace localhost par ton IP locale pour l'émulateur mobile
             url = url.replace('127.0.0.1', '192.168.100.40').replace('localhost', '192.168.100.40')
             return url
         return None
@@ -97,6 +93,7 @@ class MatiereSerializer(serializers.ModelSerializer):
                 instance.speciality = Speciality.objects.get(id=speciality_id)
             except Speciality.DoesNotExist:
                 raise serializers.ValidationError("La spécialité spécifiée n'existe pas.")
+            instance.save()
         return super().update(instance, validated_data)
 
 
@@ -119,7 +116,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def get_file_url(self, obj):
         request = self.context.get('request')
-        if obj.file and request:
+        if obj.file and request and obj.file.name:
             url = request.build_absolute_uri(obj.file.url)
             url = url.replace('127.0.0.1', '192.168.100.40').replace('localhost', '192.168.100.40')
             return url
@@ -127,7 +124,7 @@ class DocumentSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         if not data.get('matiere'):
-            raise serializers.ValidationError("Matière manquante.")
+            raise serializers.ValidationError({"matiere": "Matière obligatoire."})
         return data
 
 
