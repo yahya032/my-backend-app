@@ -20,7 +20,7 @@ router = DefaultRouter()
 router.register(r'universities', UniversityViewSet, basename='university')
 router.register(r'specialities', SpecialityViewSet, basename='speciality')
 router.register(r'levels', LevelViewSet, basename='level')
-router.register(r'semesters', LevelViewSet, basename='semester')
+router.register(r'semesters', SemesterViewSet, basename='semester')
 router.register(r'matieres', MatiereViewSet, basename='matiere')
 router.register(r'documents', DocumentViewSet, basename='document')
 
