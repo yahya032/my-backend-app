@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+
 # ---------------- Alert ----------------
 class Alert(models.Model):
     user_id = models.CharField(max_length=255)  # correspond au UID Firebase
@@ -9,6 +10,7 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.user_id})"
+
 # ---------------- University ----------------
 class University(models.Model):
     name = models.CharField(max_length=200)
@@ -18,7 +20,6 @@ class University(models.Model):
     def __str__(self):
         return self.name
 
-    # Méthode pour obtenir l'URL du calendrier
     def get_calendar_url(self):
         if self.calendar:
             return self.calendar.url
@@ -71,6 +72,18 @@ class Matiere(models.Model):
         on_delete=models.CASCADE,
         related_name='matieres'
     )
+    level = models.ForeignKey(            # 🔹 Champ ajouté pour filtrage direct
+        Level,
+        on_delete=models.CASCADE,
+        related_name='matieres',
+        blank=True,
+        null=True
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.level and self.semester:
+            self.level = self.semester.level
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({self.semester})"
@@ -90,7 +103,6 @@ class Document(models.Model):
     def __str__(self):
         return self.title
 
-    # Méthode pour obtenir l'URL du document
     def get_file_url(self):
         if self.file:
             return self.file.url
