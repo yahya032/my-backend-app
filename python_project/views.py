@@ -13,12 +13,14 @@ from .serializers import (
 )
 from firebase_admin import auth as firebase_auth
 
+
 # ---------------- ALERT ----------------
 @api_view(['GET'])
 def user_alerts(request):
     user_id = request.query_params.get('user')
     if not user_id:
         return Response({"error": "user parameter is required"}, status=status.HTTP_400_BAD_REQUEST)
+
     alerts = Alert.objects.filter(user_id=user_id).order_by('-created_at')
     serializer = AlertSerializer(alerts, many=True)
     return Response(serializer.data)
@@ -41,6 +43,7 @@ class UniversityViewSet(BaseViewSet):
     def download_calendar(self, request, pk=None):
         university = self.get_object()
 
+        # Si le fichier calendar est défini
         if university.calendar and university.calendar.name:
             file_path = university.calendar.path
             if os.path.exists(file_path):
@@ -72,8 +75,8 @@ class SpecialityViewSet(BaseViewSet):
     serializer_class = SpecialitySerializer
 
     def get_queryset(self):
+        qs = super().get_queryset()
         university_id = self.request.query_params.get('university_id')
-        qs = self.queryset
         if university_id:
             qs = qs.filter(university_id=university_id)
         return qs.order_by('id')
@@ -91,11 +94,11 @@ class SemesterViewSet(BaseViewSet):
     serializer_class = SemesterSerializer
 
     def get_queryset(self):
-        qs = self.queryset.order_by('id')  # S1 → S6
+        qs = super().get_queryset()
         level_id = self.request.query_params.get('level_id')
         if level_id:
             qs = qs.filter(level_id=level_id)
-        return qs
+        return qs.order_by('id')
 
 
 # ---------------- MATIERE ----------------
@@ -104,13 +107,12 @@ class MatiereViewSet(BaseViewSet):
     serializer_class = MatiereSerializer
 
     def get_queryset(self):
-        qs = self.queryset
+        qs = super().get_queryset()
         level_id = self.request.query_params.get('level_id')
         semester_id = self.request.query_params.get('semester_id')
         speciality_id = self.request.query_params.get('speciality_id')
         university_id = self.request.query_params.get('university_id')
 
-        # 🔹 Filtres incluant les champs vides (null)
         if level_id:
             qs = qs.filter(Q(semester__level_id=level_id) | Q(semester__level__isnull=True))
         if semester_id:
@@ -124,13 +126,12 @@ class MatiereViewSet(BaseViewSet):
 
 
 # ---------------- DOCUMENT ----------------
-# ---------------- DOCUMENT ----------------
 class DocumentViewSet(BaseViewSet):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
 
     def get_queryset(self):
-        qs = self.queryset
+        qs = super().get_queryset()
         level_id = self.request.query_params.get('level_id')
         semester_id = self.request.query_params.get('semester_id')
         speciality_id = self.request.query_params.get('speciality_id')
@@ -142,7 +143,7 @@ class DocumentViewSet(BaseViewSet):
         if semester_id:
             qs = qs.filter(Q(matiere__semester_id=semester_id) | Q(matiere__semester__isnull=True))
         if level_id:
-            qs = qs.filter(Q(matiere__level_id=level_id) | Q(matiere__level__isnull=True))
+            qs = qs.filter(Q(matiere__semester__level_id=level_id) | Q(matiere__semester__level__isnull=True))
         if speciality_id:
             qs = qs.filter(Q(matiere__speciality_id=speciality_id) | Q(matiere__speciality__isnull=True))
         if university_id:
@@ -151,11 +152,12 @@ class DocumentViewSet(BaseViewSet):
         return qs.order_by(
             'matiere__speciality__university__id',
             'matiere__speciality__id',
-            'matiere__level_id',
+            'matiere__semester__level_id',
             'matiere__semester_id',
             'matiere_id',
             'id'
         )
+
 
 # ---------------- FIREBASE ----------------
 @api_view(['GET'])

@@ -57,14 +57,12 @@ class SemesterSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'level', 'level_name']
 
 
-# ---------------- MATIERE ---------------- 
 # ---------------- MATIERE ----------------
 class MatiereSerializer(serializers.ModelSerializer):
     speciality_name = serializers.SerializerMethodField()
     university_name = serializers.SerializerMethodField()
     semester_name = serializers.SerializerMethodField()
     level_name = serializers.SerializerMethodField()
-
     speciality_id = serializers.IntegerField(write_only=True, required=True)
 
     class Meta:
@@ -100,7 +98,6 @@ class MatiereSerializer(serializers.ModelSerializer):
         if 'speciality_id' in validated_data:
             speciality_id = validated_data.pop('speciality_id')
             instance.speciality = Speciality.objects.get(id=speciality_id)
-            instance.save()
         return super().update(instance, validated_data)
 
 
@@ -149,9 +146,8 @@ class DocumentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"matiere": "Matière obligatoire."})
         return data
 
-# ---------------- DOCUMENT ----------------
- 
-# ---------------- FIREBASE SERIALIZERS ----------------
+
+# ---------------- FIREBASE ----------------
 class FirebaseUserSerializer(serializers.Serializer):
     uid = serializers.CharField()
     email = serializers.EmailField(allow_null=True)
